@@ -1,0 +1,157 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+#mynetwork{
+    height: 100vh;
+}
+
+#one > div, #two > div{
+    height: 250px;
+    width: 250px;
+    border: 2px solid black;
+}
+
+.draggable{
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#one > div{
+    background-color: red;
+}
+
+#two > div{
+    background-color: rgb(39, 211, 53);
+}
+
+#one, #two{
+    height: calc(100vh - 100px); width: 49%; display: flex; justify-content: center;
+    padding: 50px 0;
+}
+
+#one{
+    align-items: flex-start;
+}
+
+#two{
+    align-items: flex-end;
+}
+
+.node{
+    font-size:30px;
+    background-color: white;
+    color: #3B3A72; 
+    height: 145px; 
+    width: 425px; 
+    border-radius: 12px; 
+    box-shadow:
+        0px 0px 1.4px -2px rgba(0, 0, 0, 0.034),
+        0px 0px 3.3px -2px rgba(0, 0, 0, 0.048),
+        0px 0px 6.3px -2px rgba(0, 0, 0, 0.06),
+        0px 0px 11.2px -2px rgba(0, 0, 0, 0.072),
+        0px 0px 20.9px -2px rgba(0, 0, 0, 0.086),
+        0px 0px 50px -2px rgba(0, 0, 0, 0.12)
+    ;
+}
+
+.node > .title{
+    height: calc(50% - 2px);
+    border-bottom: 2px solid rgb(219,219,219);
+    display:flex;
+    align-items:center;
+    justify-content: flex-start;
+}
+
+.node > .title > .titleIcon{
+    margin: 0 15px;
+}
+
+.bottomRow{
+    height: 49%;
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bottomRow > .trackerContainer{
+    height: 100%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-evenly; 
+    width: 40%;
+}
+
+.bottomRow > .trackerContainer > .tracker{
+    background-color: #f0f3f3; 
+    border-radius: 15px; 
+    width: 65px; 
+    height: 35px;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pictures{
+    background-color: #6a6e2f; 
+    margin-right: 75px;
+    border-radius: 100%; 
+    aspect-ratio: 1; 
+    height: 35px; 
+    box-shadow: 15px 0 0 0px #610d29,
+              30px 0 0 -1px #a1b6ee,
+              45px 0 0 -2px #28282c;
+}
+
+.hoverPopup{
+    position: absolute;
+    border-radius: 12px; 
+    background: linear-gradient(337deg, rgb(216, 216, 216) 0%, rgb(248, 248, 248) 69%);
+    font-size:25px;
+    color: black;
+    padding: 10px; 
+    height: calc(165px - 20px); 
+    width: calc(500px - 20px);
+}
+
+.hoverPopup > .popupTitle{
+    height: 25%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.hoverPopup > .popupTitle > .popupIcon{
+    margin: 0 15px;
+}
+
+.hoverPopup > .popupBrow{
+    height: 74%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.popupBrow > div{
+    background-color: rgba(255, 255, 255, 0); 
+    border-radius: 100%; 
+    aspect-ratio: 1; 
+    height: 70px; 
+    border: 10px solid rgb(33, 107, 49);
+}
+
+.popupBrow > h3{
+    width: 65px; 
+    font-size: 20px;
+}
