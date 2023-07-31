@@ -1,4 +1,4 @@
-const nodeWidth = 460
+const nodeWidth = 460 //actual width 425 but 35 added for margin
 const halfNodeWidth = nodeWidth / 2
 const heirarchyStep = 450
 
@@ -62,11 +62,6 @@ function calculatePositions(mWidth){
 
     nodeRows = clumsyTree(data, 1, nodeRows, pixelWidth, 0, '')
     
-    for(let i = 0; i < 10; i++){
-        for (const key in nodeRows){
-            nodeRows[key] = adjustRows(0, pixelWidth, nodeRows[key]);
-        }
-    }
     for (const key in nodeRows){
         nodeRows[key] = adjustRows(0, pixelWidth, nodeRows[key]);
     }
@@ -80,7 +75,6 @@ function clumsyTree(data, depth, rowData, maxPWidth, parentXPos, parentID){
     if(!rowAlong[depth]){ rowAlong[depth] = 0 }
 
     const depthY = depth * heirarchyStep
-    console.log(depthY)
     const rootXIncrements = maxPWidth / (data.length + 1)
 
     let distanceTracker = { left:parentXPos, right:parentXPos }
@@ -106,7 +100,7 @@ function clumsyTree(data, depth, rowData, maxPWidth, parentXPos, parentID){
         let newXPos;
 
         if(depth === 1){
-            newXPos = rootXIncrements*(i+1)
+            newXPos = ( rootXIncrements*(i+1) ) - ( nodeWidth / 2 )
         }
         else{
 
@@ -168,72 +162,137 @@ function clumsyTree(data, depth, rowData, maxPWidth, parentXPos, parentID){
 }
 
 function adjustRows(boundsLeft, boundsRight, objectsArray) {
-
-    // sort based on leftPosX in ascending order
-    objectsArray.sort((a, b) => a.leftPosX - b.leftPosX);
   
     // checks if two objects overlap
-    function doOverlap(obj1, obj2) {
-      return obj1.rightPosX >= obj2.leftPosX;
+    function doOverlapRightToLeft(obj1, obj2) {
+        return obj1.rightPosX >= obj2.leftPosX;
     }
-  
-    let offset = 0;
-  
-    for (let i = 1; i < objectsArray.length; i++) {
 
-      const currentObj = objectsArray[i];
-      const previousObj = objectsArray[i - 1];
-  
-      // calc the minimum rightPosX for the current object
-      const minRightPosX = previousObj.rightPosX + offset;
-  
-      // Check if there is an overlap with the previous object
-      if (doOverlap(currentObj, previousObj)) {
-        // Calculate the required offset to avoid overlap
-        offset = Math.max(offset, minRightPosX - currentObj.leftPosX + 1);
-  
-        // Adjust the current object's position
-        currentObj.leftPosX += offset;
-        currentObj.rightPosX += offset;
-        currentObj.offset += offset
-  
-        // Check if the adjusted object is out of bounds on the right side
-        if (currentObj.rightPosX > boundsRight) {
-          const diff = currentObj.rightPosX - boundsRight;
-          currentObj.rightPosX -= diff;
-          currentObj.leftPosX -= diff;
-          currentObj.offset -= diff
+    function doOverlapLeftToRight(obj1, obj2) {
+        return obj1.leftPosX <= obj2.rightPosX;
+    }
+
+    function topsAndTails(objArray, overlapFound){
+        
+        // Check if the first object is out of bounds on the left side
+        if (objArray[0].leftPosX < boundsLeft) {
+
+            overlapFound = true
+            const diff = boundsLeft - objArray[0].leftPosX;
+            objArray[0].leftPosX += diff;
+            objArray[0].rightPosX += diff;
+            objArray[0].offset += diff;
         }
-      } else {
-        // If there is no overlap, reset the offset
-        offset = 0;
-  
+        
+        // Check if the last object is out of bounds on the right side
+        const lastIndex = objArray.length - 1;
+        if (objArray[lastIndex].rightPosX > boundsRight) {
+
+            overlapFound = true
+            const diff = objArray[lastIndex].rightPosX - boundsRight;
+            objArray[lastIndex].rightPosX -= diff;
+            objArray[lastIndex].leftPosX -= diff;
+            objArray[lastIndex].offset -= diff;
+        }
+
+        return objArray
+    }
+
+    function boundaryCheck(curObj){ 
+
+        // Check if the adjusted object is out of bounds on the left side
+        if (curObj.leftPosX < boundsLeft) {
+            const diff = curObj.leftPosX - boundsLeft;
+            curObj.rightPosX += diff;
+            curObj.leftPosX += diff;
+            curObj.offset += diff;
+        }
+
         // Check if the object is out of bounds on the right side
-        if (currentObj.rightPosX > boundsRight) {
-          const diff = currentObj.rightPosX - boundsRight;
-          currentObj.rightPosX -= diff;
-          currentObj.leftPosX -= diff;
-          currentObj.offset -= diff
+        if (curObj.rightPosX > boundsRight) {
+            const diff = curObj.rightPosX - boundsRight;
+            curObj.rightPosX -= diff;
+            curObj.leftPosX -= diff;
+            curObj.offset -= diff
         }
-      }
+
+        return curObj
     }
-  
-    // Check if the first object is out of bounds on the left side
-    if (objectsArray[0].leftPosX < boundsLeft) {
-      const diff = boundsLeft - objectsArray[0].leftPosX;
-      objectsArray[0].leftPosX += diff;
-      objectsArray[0].rightPosX += diff;
-      objectsArray[0].offset += diff;
+
+    let offset;
+    let overlapsExist = true;
+
+    while(overlapsExist === true){
+
+        console.log("AHH")
+
+        let overlapDetected = false
+
+        // sort based on leftPosX in ascending order
+        objectsArray.sort((a, b) => a.leftPosX - b.leftPosX);   
+
+        for (let i = 0; i < objectsArray.length - 1; i++) {
+
+            let currentObj = objectsArray[i]
+            const nextObj = objectsArray[i + 1];
+
+            console.log(currentObj);
+            console.log(nextObj)
+
+        
+            // Check if there is an overlap with the next object
+            if (doOverlapRightToLeft(currentObj, nextObj)) {
+
+                overlapDetected = true;
+
+                // Calculate the required offset to avoid overlap
+                offset = nextObj.leftPosX - currentObj.rightPosX;
+            
+                // Adjust the current object's position
+                currentObj.leftPosX += offset;
+                currentObj.rightPosX += offset;
+                currentObj.offset += offset
+            } 
+
+            currentObj = boundaryCheck(currentObj)
+        }
+    
+        objectsArray = topsAndTails(objectsArray, overlapDetected)
+
+        // sort based on leftPosX in ascending order
+        objectsArray.sort((a, b) => a.leftPosX - b.leftPosX);   
+
+        for (let i = objectsArray.length - 1; i > 0; i--){
+        
+            let currentObj = objectsArray[i]
+            const prevObj = objectsArray[i - 1];
+
+            console.log(currentObj);
+            console.log(prevObj)
+    
+            // Check if there is an overlap with the next object
+            if (doOverlapLeftToRight(currentObj, prevObj)) {
+
+                overlapDetected = true;
+
+                // Calculate the required offset to avoid overlap
+                offset = prevObj.leftPosX - currentObj.rightPosX;
+        
+                // Adjust the current object's position
+                currentObj.leftPosX += offset;
+                currentObj.rightPosX += offset;
+                currentObj.offset += offset
+            } 
+
+            currentObj = boundaryCheck(currentObj)
+        }
+
+        objectsArray = topsAndTails(objectsArray, overlapDetected)
+
+        overlapDetected = false
+        if(overlapDetected === false){ overlapsExist = false }
     }
-  
-    // Check if the last object is out of bounds on the right side
-    const lastIndex = objectsArray.length - 1;
-    if (objectsArray[lastIndex].rightPosX > boundsRight) {
-      const diff = objectsArray[lastIndex].rightPosX - boundsRight;
-      objectsArray[lastIndex].rightPosX -= diff;
-      objectsArray[lastIndex].leftPosX -= diff;
-      objectsArray[lastIndex].offset -= diff;
-    }
+
   
     return objectsArray;
 }

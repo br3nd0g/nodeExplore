@@ -9,6 +9,7 @@ function addNodes(){
         for(const rowIndex in rows[key]){
 
             const offset = rows[key][rowIndex].offset;
+            console.log(offset)
 
             const setNodes = rows[key][rowIndex].nodes;
 
@@ -16,7 +17,6 @@ function addNodes(){
 
                 const newNode = document.createElement("div");
 
-                console.log(setNodes[index].id)
                 newNode.id = `node${setNodes[index].id}`
                 newNode.classList.add('node')
                 newNode.classList.add('draggable')
@@ -41,6 +41,7 @@ function addNodes(){
 
                 document.body.appendChild(newNode);
 
+                console.log(setNodes[index])
                 newNode.style.left = (setNodes[index].x + offset) + "px"
                 newNode.style.top = (setNodes[index].y) + "px"
 
@@ -60,7 +61,9 @@ function makeConnections(){
             thickness: 10, 
             endpoint: { size: 0.5 } ,
             sourcePosition: '',
-            destinationPosition: 'topCenter'
+            destinationPosition: 'topCenter',
+            forceDirection: "vertical",
+            sourcePosition: 'bottomCenter'
         });
 
         connections[i].arrow = newArrow;
