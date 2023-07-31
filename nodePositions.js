@@ -1,6 +1,6 @@
 const nodeWidth = 460 //actual width 425 but 35 added for margin
 const halfNodeWidth = nodeWidth / 2
-const heirarchyStep = 450
+const heirarchyStep = 600
 
 let rowWidths = {}
 let rowAlong = {}
@@ -63,7 +63,9 @@ function calculatePositions(mWidth){
     nodeRows = clumsyTree(data, 1, nodeRows, pixelWidth, 0, '')
     
     for (const key in nodeRows){
+        console.log(nodeRows[key].sort((a, b) => a.leftPosX - b.leftPosX))
         nodeRows[key] = adjustRows(0, pixelWidth, nodeRows[key]);
+        console.log(nodeRows[key])
     }
 
     return nodeRows
@@ -77,18 +79,18 @@ function clumsyTree(data, depth, rowData, maxPWidth, parentXPos, parentID){
     const depthY = depth * heirarchyStep
     const rootXIncrements = maxPWidth / (data.length + 1)
 
-    let distanceTracker = { left:parentXPos, right:parentXPos }
+    let distanceTracker = parentXPos
     let childSet = []
     let nodeId;
     
     const evenNodesInData = data.length % 2 === 0;
-    let middlePlaced = false;
-    let placeOnRight = true
-
 
     if(evenNodesInData){
-        distanceTracker.left += nodeWidth / 2;
-        distanceTracker.right -= nodeWidth / 2;
+        distanceTracker += nodeWidth / 2;
+        distanceTracker -= (data.length / 2) * nodeWidth
+    }
+    else{
+        distanceTracker -= ((data.length - 1) / 2) * nodeWidth
     }
 
     for(let i = 0; i < data.length; i++){
@@ -106,42 +108,11 @@ function clumsyTree(data, depth, rowData, maxPWidth, parentXPos, parentID){
 
             connections.push({ from: parentID, to: nodeId })
 
-            if(evenNodesInData){
-                //even num. nodes
-                if(placeOnRight){
-                    distanceTracker.right += nodeWidth;
-                    newXPos = distanceTracker.right
-                    placeOnRight = false;
-                }
-                else{
-                    distanceTracker.left -= nodeWidth;
-                    newXPos = distanceTracker.left
-                    placeOnRight = false;
-                }
-            }
-            else{
-                //odd num. nodes
-                if(middlePlaced){
-                    if(placeOnRight){
-                        distanceTracker.right += nodeWidth;
-                        newXPos = distanceTracker.right
-                        placeOnRight = false;
-                    }
-                    else{
-                        distanceTracker.left -= nodeWidth;
-                        newXPos = distanceTracker.left
-                        placeOnRight = false;
-                    }
-                }
-                else{
-                    newXPos = parentXPos;
-                    middlePlaced = true;
-                }
-            }
+            newXPos = distanceTracker
+            distanceTracker += nodeWidth
         }
 
-
-        childSet.push({ x: newXPos, y: depthY, id: nodeId, name: data[i].name, description: data[i].description })
+        childSet.push({ x: Math.floor(newXPos), y: depthY, id: nodeId, name: data[i].name, description: data[i].description })
 
         if(data[i].subObjectives.length > 0){
             rowData = clumsyTree(data[i].subObjectives, depth + 1, rowData, maxPWidth, newXPos, nodeId)
@@ -152,9 +123,10 @@ function clumsyTree(data, depth, rowData, maxPWidth, parentXPos, parentID){
 
     rowData[depth].push({
         leftPosX: childSetLeft,
-        rightPosX: childSetRight,
+        rightPosX: childSetRight + nodeWidth,
         nodes: childSet,
-        offset: 0
+        offset: 0,
+        parentAlong: rowAlong[depth]
     })
 
     return rowData
@@ -165,11 +137,11 @@ function adjustRows(boundsLeft, boundsRight, objectsArray) {
   
     // checks if two objects overlap
     function doOverlapRightToLeft(obj1, obj2) {
-        return obj1.rightPosX >= obj2.leftPosX;
+        return obj1.rightPosX > obj2.leftPosX;
     }
 
     function doOverlapLeftToRight(obj1, obj2) {
-        return obj1.leftPosX <= obj2.rightPosX;
+        return obj1.leftPosX < obj2.rightPosX;
     }
 
     function topsAndTails(objArray, overlapFound){
@@ -196,13 +168,17 @@ function adjustRows(boundsLeft, boundsRight, objectsArray) {
         }
 
         return objArray
+            
     }
 
-    function boundaryCheck(curObj){ 
+    function boundaryCheck(curObj, overlapFound){ 
 
         // Check if the adjusted object is out of bounds on the left side
         if (curObj.leftPosX < boundsLeft) {
-            const diff = curObj.leftPosX - boundsLeft;
+
+            overlapFound = true
+
+            const diff = boundsLeft - curObj.leftPosX;
             curObj.rightPosX += diff;
             curObj.leftPosX += diff;
             curObj.offset += diff;
@@ -210,6 +186,9 @@ function adjustRows(boundsLeft, boundsRight, objectsArray) {
 
         // Check if the object is out of bounds on the right side
         if (curObj.rightPosX > boundsRight) {
+
+            overlapFound = true
+
             const diff = curObj.rightPosX - boundsRight;
             curObj.rightPosX -= diff;
             curObj.leftPosX -= diff;
@@ -222,53 +201,47 @@ function adjustRows(boundsLeft, boundsRight, objectsArray) {
     let offset;
     let overlapsExist = true;
 
+    // sort based on leftPosX in ascending order 
+    objectsArray.sort((a, b) => a.parentAlong - b.parentAlong);  
+
     while(overlapsExist === true){
 
-        console.log("AHH")
-
-        let overlapDetected = false
-
-        // sort based on leftPosX in ascending order
-        objectsArray.sort((a, b) => a.leftPosX - b.leftPosX);   
+        let overlapDetected = false 
 
         for (let i = 0; i < objectsArray.length - 1; i++) {
 
             let currentObj = objectsArray[i]
-            const nextObj = objectsArray[i + 1];
-
-            console.log(currentObj);
-            console.log(nextObj)
-
+            let nextObj = objectsArray[i + 1];
         
             // Check if there is an overlap with the next object
             if (doOverlapRightToLeft(currentObj, nextObj)) {
 
-                overlapDetected = true;
+                overlapDetected = true
 
                 // Calculate the required offset to avoid overlap
-                offset = nextObj.leftPosX - currentObj.rightPosX;
-            
-                // Adjust the current object's position
-                currentObj.leftPosX += offset;
-                currentObj.rightPosX += offset;
-                currentObj.offset += offset
-            } 
+                offset = currentObj.rightPosX - nextObj.leftPosX ;
 
-            currentObj = boundaryCheck(currentObj)
+                // Adjust the current object's position
+                nextObj.leftPosX += offset;
+                nextObj.rightPosX += offset;
+                nextObj.offset += offset
+
+            } 
+        }
+
+        for(let i = 0; i < objectsArray.length; i++){
+            objectsArray[i] = boundaryCheck(objectsArray[i])
         }
     
         objectsArray = topsAndTails(objectsArray, overlapDetected)
 
+
         // sort based on leftPosX in ascending order
-        objectsArray.sort((a, b) => a.leftPosX - b.leftPosX);   
 
         for (let i = objectsArray.length - 1; i > 0; i--){
         
             let currentObj = objectsArray[i]
-            const prevObj = objectsArray[i - 1];
-
-            console.log(currentObj);
-            console.log(prevObj)
+            let prevObj = objectsArray[i - 1];
     
             // Check if there is an overlap with the next object
             if (doOverlapLeftToRight(currentObj, prevObj)) {
@@ -276,20 +249,21 @@ function adjustRows(boundsLeft, boundsRight, objectsArray) {
                 overlapDetected = true;
 
                 // Calculate the required offset to avoid overlap
-                offset = prevObj.leftPosX - currentObj.rightPosX;
-        
-                // Adjust the current object's position
-                currentObj.leftPosX += offset;
-                currentObj.rightPosX += offset;
-                currentObj.offset += offset
-            } 
+                offset = prevObj.rightPosX - currentObj.leftPosX;
 
-            currentObj = boundaryCheck(currentObj)
+                // Adjust the current object's position
+                prevObj.leftPosX -= offset;
+                prevObj.rightPosX -= offset;
+                prevObj.offset -= offset
+            } 
+        }
+
+        for(let i = 0; i < objectsArray.length; i++){
+            objectsArray[i] = boundaryCheck(objectsArray[i])
         }
 
         objectsArray = topsAndTails(objectsArray, overlapDetected)
 
-        overlapDetected = false
         if(overlapDetected === false){ overlapsExist = false }
     }
 

@@ -9,11 +9,10 @@ function addNodes(){
         for(const rowIndex in rows[key]){
 
             const offset = rows[key][rowIndex].offset;
-            console.log(offset)
-
             const setNodes = rows[key][rowIndex].nodes;
 
             for(const index in setNodes){
+
 
                 const newNode = document.createElement("div");
 
@@ -41,7 +40,6 @@ function addNodes(){
 
                 document.body.appendChild(newNode);
 
-                console.log(setNodes[index])
                 newNode.style.left = (setNodes[index].x + offset) + "px"
                 newNode.style.top = (setNodes[index].y) + "px"
 
